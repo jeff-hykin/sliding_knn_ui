@@ -1,7 +1,7 @@
 import sys
 import os
 
-from main.specific_tools import Transformers, LazyDict
+from specific_tools import Transformers, LazyDict
 
 global_state = LazyDict(
     

@@ -58,11 +58,13 @@ async def set_training_data(request : web.Request):
 @routes.post('/set_predict_data')
 async def set_predict_data(request : web.Request):
     try:
-        data = await request.text()
+        post_result = await request.post()
+        large_file = post_result.get("file")
+        handle_incoming_predict_df(large_file.file)
     except Exception as error:
-        print('error = ', error)
-    request
-    return web.Response(text="null")
+        return web.Response(text=f'''{{"success":false, "error": {json.dumps(f"{error}")} }}''')
+        
+    return web.Response(text='''{"success":true}''')
 
 @routes.post('/run_prediction')
 async def run_prediction(request : web.Request):
