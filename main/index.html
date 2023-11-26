@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nearest Match</title>
     <link rel="stylesheet" href="https://unpkg.com/css-baseline/css/3.css">
+    <link rel="stylesheet" href="https://cdn.skypack.dev/gridjs@6.0.6//dist/theme/mermaid.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto');
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
@@ -753,6 +754,7 @@
     // Initialize
     // 
     // 
+        import * as gridjs from "https://cdn.skypack.dev/gridjs@6.0.6"
         // const ElementalLibrary = (await import("https://cdn.skypack.dev/@!!!!!/elemental@0.0.12")).default
         // const ContainerLibrary = (await import("https://cdn.skypack.dev/@!vanilla/container@v1.0.5")).default
         // inlined version of what is above
@@ -915,12 +917,28 @@
                 }
                 return element
             }
+            
+            const Grid = ({styles, data})=> {
+                const element = document.createElement("div")
+                new gridjs.Grid({
+                    columns: ["Name", "Email", "Phone Number"],
+                    data: data || [
+                        ["John", "john@example.com", "(353) 01 222 3333"],
+                        ["Mark", "mark@gmail.com", "(01) 22 888 4444"],
+                        ["Eoin", "eoin@gmail.com", "0097 22 654 00033"],
+                        ["Sarah", "sarahcdd@gmail.com", "+322 876 1233"],
+                        ["Afshin", "afshin@mail.com", "(353) 22 87 8356"]
+                    ]
+                }).render(element)
+                return element
+            }
         // 
         // custom elements import
         // 
             const { html } = window.Elemental({
                 Container: ContainerLibrary,
                 Button,
+                Grid,
                 UploadFileButton({backendEndpoint, responseHandler, children}) {
                     const element = document.createElement(`input`)
                     element.setAttribute("type", "file") 
@@ -965,6 +983,8 @@
             <Button>
                 Howdy!
             </Button>
+            <Grid>
+            </Grid>
             <UploadFileButton backendEndpoint="/set_training_data">
                 Upload Training Data
             </UploadFileButton>

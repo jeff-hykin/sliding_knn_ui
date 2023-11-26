@@ -33,11 +33,17 @@ if debugging: print('starting server')
 @routes.get('/')
 async def index(request : web.Request): 
     if debugging: print(f'''web request''')
+    output = ""
     try:
+        import os
         with open("./main/index.html",'r') as f:
             output = f.read()
-    except:
-        output = None
+    except Exception as error:
+        try:
+            with open("./index.html",'r') as f:
+                output = f.read()
+        except Exception as error:
+            print(f'''error = {error}''')
     return web.Response(text=output, content_type='text/html')
 
 @routes.post('/ping')
