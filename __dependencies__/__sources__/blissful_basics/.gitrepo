@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/jeff-hykin/blissful_basics
+	branch = master
+	commit = 2e1369d0b1cc4873a92fd54b3096f45438b1a01d
+	parent = be2d87decb89c44bee05ea624d6872135b3fff30
+	method = merge
+	cmdver = 0.4.5
