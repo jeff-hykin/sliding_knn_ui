@@ -43,19 +43,19 @@
 # Python
 # 
 [[packages]]
-load = [ "python38",]
+load = [ "python310",]
 
 [[packages]]
-load = [ "python38Packages", "setuptools",]
+load = [ "python310Packages", "setuptools",]
 
 [[packages]]
-load = [ "python38Packages", "pip",]
+load = [ "python310Packages", "pip",]
 
 [[packages]]
-load = [ "python38Packages", "virtualenv",]
+load = [ "python310Packages", "virtualenv",]
 
 [[packages]]
-load = [ "python38Packages", "wheel",]
+load = [ "python310Packages", "wheel",]
 
 [[packages]]
 load = [ "cmake",]
@@ -66,6 +66,9 @@ load = [ "pkg-config",]
 [[packages]]
 load = [ "libffi",]
 
+[[packages]]
+load = [ "llvmPackages_11", "openmp" ]
+from = "e11c750b42664027fcfb66c3f9ff3fe304f5e005"
 
 # 
 # for .so errors on linux with opencv+ffmpeg
@@ -213,6 +216,7 @@ load = [ "sd",]
 
 [[packages]]
 load = [ "dua",]
+from = "ce6aa13369b667ac2542593170993504932eb836"
 
 [[packages]]
 load = [ "tealdeer",]
@@ -222,9 +226,11 @@ load = [ "bottom",]
 
 [[packages]]
 load = [ "exa",]
+from = "ce6aa13369b667ac2542593170993504932eb836"
 
 [[packages]]
 load = [ "zsh",]
+from = "ce6aa13369b667ac2542593170993504932eb836"
 
 [[packages]]
 load = [ "zsh-syntax-highlighting",]
@@ -237,9 +243,6 @@ load = [ "zsh-autosuggestions",]
 
 [[packages]]
 load = [ "spaceship-prompt",]
-
-[[packages]]
-load = [ "nnn",]
 
 [[packages]]
 load = [ "jq",]
@@ -408,7 +411,7 @@ from = "c00039f697caa02208a01e7712bfe11c484cceca"
 # 
 [[packages]]
 load = [ "deno",]
-from = "ce6aa13369b667ac2542593170993504932eb836"
+from = "c10d7026fbae24c51e87586c6b6e4c46c0365007"
 
 [[packages]]
 load = [ "nix",]

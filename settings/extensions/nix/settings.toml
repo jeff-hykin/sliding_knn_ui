@@ -1,4 +1,4 @@
-defaultFrom = "ce6aa13369b667ac2542593170993504932eb836" # this is a commit hash on the nixpkgs repo on github for the stable version 22.05 (May 2022)
+defaultFrom = "c10d7026fbae24c51e87586c6b6e4c46c0365007" # this is a commit hash on the nixpkgs repo on github for the stable version 22.05 (May 2022)
 
 [config]
 allowUnfree = true
