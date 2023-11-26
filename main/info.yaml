@@ -1,0 +1,10 @@
+(project):
+    (local_data): ./local_data.ignore.yaml
+    
+    (path_to):
+        data: "../data/"
+    
+    # example profiles
+    (profiles):
+        (default):
+            number_of_nearest_neighbors: 3
