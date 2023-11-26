@@ -8,6 +8,8 @@ import asyncio
 from time import time as now
 
 
+from modeling import handle_incoming_training_file, handle_incoming_predict_df, run_training, run_prediction
+
 # 
 # args setup
 # 
@@ -70,30 +72,6 @@ async def run_prediction(request : web.Request):
         print('error = ', error)
     request
     return web.Response(text="null")
-
-# @routes.post('/large/set/{content_type}/{data_id}')
-# async def set_large_data(request : web.Request):
-#     global large_data
-#     content_type = request.match_info["content_type"]
-#     content_type = content_type.replace(r"%2F", "/")
-#     large_data_id = request.match_info["data_id"]
-#     # save in ram
-#     post_result = await request.post()
-#     large_file = post_result.get("file")
-#     if large_file is not None:
-#         large_data[large_data_id] = large_file.file.read()
-#     return web.Response(text="null")
-
-# @routes.get('/large/get/{content_type}/{data_id}')
-# async def get_large_data(request : web.Request):
-#     global large_data
-#     content_type = request.match_info["content_type"]
-#     content_type = content_type.replace(r"%2F", "/")
-#     large_data_id = request.match_info["data_id"]
-#     return web.Response(
-#         content_type=content_type,
-#         body=large_data[large_data_id],
-#     )
 
 # 
 # start server

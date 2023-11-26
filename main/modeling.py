@@ -30,6 +30,24 @@ def run_training(conditions):
     global_state.conditions = conditions
     global_state.models = models
     
+def run_prediction(): 
+    recent_data = global_state.predict_df
+    conditions = global_state.conditions
+    models = global_state.models
+    
+    output_sampler = dict(recent_data.iloc[0])
+    output_kind = tuple(output_sampler[each] for each in conditions["output_groups"]) 
+    model = models[output_kind]
+    # add one extra row that will be skipped
+    recent_data.loc[len(recent_data)] = recent_data.iloc[-1]
+    recent_data["__run_index"] = [0]*len(recent_data)
+    conditions, processed_io = generate_data(recent_data, **conditions)
+    inputs, outputs = processed_io[output_kind]
+    prediction = model.predict(inputs[:])
+    return {
+        name: value
+            for name, value in zip(outputs.columns, prediction[0])
+    }
 
 def generate_data(
     df,
@@ -115,21 +133,3 @@ def generate_data(
             for key, (inputs, outputs) in io_for_product.items()
     }
 
-def run_prediction(): 
-    recent_data = global_state.predict_df
-    conditions = global_state.conditions
-    models = global_state.models
-    
-    output_sampler = dict(recent_data.iloc[0])
-    output_kind = tuple(output_sampler[each] for each in conditions["output_groups"]) 
-    model = models[output_kind]
-    # add one extra row that will be skipped
-    recent_data.loc[len(recent_data)] = recent_data.iloc[-1]
-    recent_data["__run_index"] = [0]*len(recent_data)
-    conditions, processed_io = generate_data(recent_data, **conditions)
-    inputs, outputs = processed_io[output_kind]
-    prediction = model.predict(inputs[:])
-    return {
-        name: value
-            for name, value in zip(outputs.columns, prediction[0])
-    }
