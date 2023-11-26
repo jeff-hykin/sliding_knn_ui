@@ -921,7 +921,36 @@
             const { html } = window.Elemental({
                 Container: ContainerLibrary,
                 Button,
+                UploadFileButton({backendEndpoint, responseHandler, children}) {
+                    const element = document.createElement(`input`)
+                    element.setAttribute("type", "file") 
+                    element.addEventListener("input", (event)=>{
+                        if (element.files.length > 0) {
+                            const file = element.files[0];
+                            
+                            // Create a FormData object to send the file
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            // Replace 'your-backend-endpoint' with the actual backend endpoint
+                            // Use the Fetch API to send the file to the backend
+                            fetch(backendEndpoint, {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(responseHandler||(data => {
+                                console.log('File uploaded successfully:', data);
+                            }))
+                            .catch(error => {
+                                console.error('Error uploading file:', error);
+                            });
+                        }
+                    })
+                    return element
+                }
             })
+            
         
     // 
     // 
@@ -936,6 +965,9 @@
             <Button>
                 Howdy!
             </Button>
+            <UploadFileButton backendEndpoint="/set_training_data">
+                Upload Training Data
+            </UploadFileButton>
         </body>
     `
     document.body.animate(...fadeIn)
