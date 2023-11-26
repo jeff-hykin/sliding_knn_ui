@@ -790,6 +790,36 @@
                 }
             ],
         ]
+        // 
+        // tools
+        // 
+                const helperElement = document.createElement("div")
+                helperElement.setAttribute("note", "STUFF WILL BREAK IF YOU DELETE ME")
+                helperElement.setAttribute("style", "position: fixed; top: 0; left: 0;")
+                window.addEventListener("load", ()=>document.body.prepend(helperElement))
+                const askForFiles = async ()=>{
+                    return new Promise((resolve, reject)=>{
+                        const cleanResolve = (returnValue)=>{
+                            resolve(returnValue)
+                            window.removeEventListener("focus", listener)
+                            try {
+                                helperElement.removeChild(filePicker)
+                            } catch (error) {
+                                
+                            }
+                        }
+                        const listener = ()=>cleanResolve([])
+                        window.addEventListener("focus", listener)
+                        let filePicker = html`<input
+                            type="file"
+                            onInput=${event=>{ cleanResolve(event.target.files) }}
+                            onBlur=${event=>{ cleanResolve([]) }}
+                            hidden
+                            />`
+                        helperElement.appendChild(filePicker)
+                        filePicker.click()
+                    })
+                }
     
         // 
         // Custom elements
@@ -808,7 +838,7 @@
                     })
                 }
             }
-            const Button = ({ styles, children, })=>{
+            const Button = ({ style, children, ...other})=>{
                 const before = html`
                     <span
                         style=${`
@@ -873,6 +903,7 @@
                             cursor: pointer;
                             transition: box-shadow 0.2s;
                         `}"
+                        ...${other}
                         >
                             ${before}
                             ${children}
@@ -918,7 +949,7 @@
                 return element
             }
             
-            const Grid = ({styles, data})=> {
+            const Grid = ({style, data})=> {
                 const element = document.createElement("div")
                 new gridjs.Grid({
                     columns: ["Name", "Email", "Phone Number"],
@@ -939,55 +970,118 @@
                 Container: ContainerLibrary,
                 Button,
                 Grid,
-                UploadFileButton({backendEndpoint, responseHandler, children}) {
-                    const element = document.createElement(`input`)
-                    element.setAttribute("type", "file") 
-                    element.addEventListener("input", (event)=>{
-                        if (element.files.length > 0) {
-                            const file = element.files[0];
-                            
-                            // Create a FormData object to send the file
-                            const formData = new FormData();
-                            formData.append('file', file);
+                Settings({ children }) {
+                    const element = html`
+                        <form
+                            action=""
+                            method="post"
+                            display=flex
+                            flex-direction=column
+                            gap=0.5rem
+                            padding=1rem
+                            background=white
+                            border-radius=1rem
+                            box-shadow="0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"
+                            margin=1rem
+                            min-width=21rem
+                            >
+                                <label for="datetimeColumn">Name of Datetime Column</label>
+                                <input type="text" name="datetimeColumn" required background=whitesmoke border-radius=0.2rem border=none value="datetime" margin-bottom=1.5rem>
+                                
+                                <label for="maxHoursGap">Max Gap Size (Hours)</label>
+                                <input type="number" name="maxHoursGap" min="1" required background=whitesmoke border-radius=0.2rem border=none value=4 margin-bottom=1.5rem>
+                                
+                                <label for="windowSize">Window Size:</label>
+                                <input type="number" name="windowSize" min="1" required background=whitesmoke border-radius=0.2rem border=none value=10 margin-bottom=1.5rem>
 
-                            // Replace 'your-backend-endpoint' with the actual backend endpoint
-                            // Use the Fetch API to send the file to the backend
-                            fetch(backendEndpoint, {
-                                method: 'POST',
-                                body: formData
+                                <label for="importanceDecay">Importance Decay (between 0 and 1)</label>
+                                <input type="number" name="importanceDecay" step="0.01" min="0" max="1" value=0.7 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
+                                
+                                <label for="outputGroups">Output Groups (comma-separated)</label>
+                                <input type="text" name="outputGroups" required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
+                                
+                                <Button type="submit" onClick=${(event)=>{window.element = element; window.event=event}}>
+                                    Submit
+                                </Button>
+                        </form>
+                    `
+                    // cache inputs to localStorage
+                    for (const each of [...element.children]) {
+                        if (each.tagName == "INPUT") {
+                            const localStorageName = `settings:${each.name}`
+                            each.addEventListener("input", (event)=>{
+                                localStorage.setItem(localStorageName, event.target.value)
                             })
-                            .then(response => response.json())
-                            .then(responseHandler||(data => {
-                                console.log('File uploaded successfully:', data);
-                            }))
-                            .catch(error => {
-                                console.error('Error uploading file:', error);
-                            });
+                            let value
+                            try {
+                                value = localStorage.getItem(localStorageName)
+                            } catch (error) {
+                                
+                            }
+                            if (value != null) {
+                                each.value = value
+                            }
                         }
-                    })
+                    }
                     return element
+                },
+                UploadFileButton({style, backendEndpoint, responseHandler, children}) {
+                    return html`<Button
+                        style=${style}
+                        onClick=${
+                            (event)=>{
+                                console.log(`event is:`,event)
+                                askForFiles().then((files)=>{
+                                    if (files.length > 0) {
+                                        const file = files[0];
+                                        
+                                        // Create a FormData object to send the file
+                                        const formData = new FormData()
+                                        formData.append('file', file)
+
+                                        // Replace 'your-backend-endpoint' with the actual backend endpoint
+                                        // Use the Fetch API to send the file to the backend
+                                        fetch(backendEndpoint, {
+                                            method: 'POST',
+                                            body: formData
+                                        })
+                                        .then(response => response.json())
+                                        .then(responseHandler||(data => {
+                                            console.log('File uploaded successfully:', data);
+                                        }))
+                                        .catch(error => {
+                                            console.error('Error uploading file:', error);
+                                        });
+                                    }
+                                })
+                            }
+                        }
+                        >
+                            ${children}
+                    </Button>`
                 }
             })
-            
-        
+    
     // 
     // 
     // Main Code
     // 
     // 
     document.body = html`
-        <body font-size=15px min-height=100vh min-width=100vw>
-            <Container row wrap height="fit-content" width="100%" background="var(--soft-gray-gradient)">
-                Howdy
+        <body font-size=15px min-height=100vh min-width=100vw background="var(--soft-gray-gradient)">
+            <Container padding=1rem width=100% row wrap height="fit-content" width="100%" background="var(--soft-gray-gradient)" horizontalAlignment="space-evenly">
+                <UploadFileButton backendEndpoint="/set_training_data">
+                    Upload Training Data
+                </UploadFileButton>
+                <UploadFileButton backendEndpoint="/set_predict_data">
+                    Upload Predict Data
+                </UploadFileButton>
             </Container>
-            <Button>
-                Howdy!
-            </Button>
-            <Grid>
-            </Grid>
-            <UploadFileButton backendEndpoint="/set_training_data">
-                Upload Training Data
-            </UploadFileButton>
+            
+            <Container row height="fit-content" width="100%">
+                <Settings />
+                <Grid />
+            </Container>
         </body>
     `
     document.body.animate(...fadeIn)

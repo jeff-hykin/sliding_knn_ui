@@ -66,7 +66,7 @@ def generate_data(
         'dt1_soda_ash_flow_scaled_hr': 1.0,
     },
     value_ranges={},
-    
+    **kwargs,
 ):
     conditions = dict(
         window_size=window_size,
@@ -74,6 +74,7 @@ def generate_data(
         output_groups=output_groups,
         input_importance=input_importance,
         value_ranges=value_ranges,
+        **kwargs,
     )
     # get the datetime
     df[datetime_column] = pandas.to_datetime(df[datetime_column], errors='coerce')
