@@ -10,6 +10,9 @@ import pandas
 import simplejson as json
 
 from modeling import handle_incoming_training_file, handle_incoming_predict_df, run_training, run_prediction
+# TODO:
+    # render output response
+    # add warnings/errors
 
 # 
 # args setup
@@ -80,13 +83,28 @@ async def set_predict_data(request : web.Request):
     return web.Response(text=f'''{{"success":true, "preview":{result} }}''')
 
 @routes.post('/run_prediction')
-async def run_prediction(request : web.Request):
+async def run_prediction_endpoint(request : web.Request):
     try:
         data = await request.text()
+        values = json.loads(data)
+        kwargs = {}
+        kwargs['number_of_neighbors']  = values['numberOfNeighbors']
+        kwargs['datetime_column']      = values['datetimeColumn']
+        kwargs['max_hours_gap']        = values['maxHoursGap']
+        kwargs['window_size']          = values['windowSize']
+        kwargs['importance_decay']     = values['importanceDecay']
+        kwargs['output_groups']        = values['outputGroups']
+        kwargs['input_importance']     = values['inputImportance']
+        print(f'''values = {values}''')
+        run_training(kwargs)
+        output = run_prediction()
     except Exception as error:
+        print('error = ', type(error))
         print('error = ', error)
-    request
-    return web.Response(text="null")
+        raise error
+        return web.Response(text=json.dumps(dict(error=f"{error}"), ignore_nan=True))
+    
+    return web.Response(text=json.dumps(output, ignore_nan=True))
 
 # 
 # start server

@@ -1,8 +1,13 @@
 import sys
 import os
 import pandas
+import numpy as np
+import numbers
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
-from specific_tools import Transformers, LazyDict
+from specific_tools import Transformers, LazyDict, sliding_window
 
 global_state = LazyDict(
     
@@ -80,6 +85,8 @@ def generate_data(
     **kwargs,
 ):
     conditions = dict(
+        datetime_column=datetime_column,
+        max_hours_gap=max_hours_gap,
         window_size=window_size,
         importance_decay=importance_decay,
         output_groups=output_groups,
@@ -89,14 +96,13 @@ def generate_data(
     )
     # get the datetime
     df[datetime_column] = pandas.to_datetime(df[datetime_column], errors='coerce')
-    df.set_index(datetime_column, inplace=True)
-    
+    df = df.set_index(datetime_column)
     df = Transformers.simplify_column_names(df)
     for each_column in df.columns:
         df = Transformers.attempt_force_numeric(df, each_column)
         df[each_column] = df[each_column].interpolate(method='linear')
 
-    df["__timestamp_hours"] = (df[column].values.astype('float64')/1000000000)/(60*60)
+    df["__timestamp_hours"] = (df.index.values.astype('float64')/1000000000)/(60*60)
     df = Transformers.label_by_value_gaps(df, column="__timestamp_hours", max_gap_size=max_hours_gap, new_column_name="__run_index")
     
     input_columns = list(input_importance.keys())
@@ -110,7 +116,8 @@ def generate_data(
     
     io_for_product = {}
     grouped = df.groupby(by=[*output_groups,'__run_index'])
-    for (*output_groups, run_index) in grouped.indices.keys():
+    for (*output_group, run_index) in grouped.indices.keys():
+        output_group = tuple(output_group)
         if output_group not in io_for_product:
             inputs = {
                 f"{column}_{index}": []
@@ -123,7 +130,7 @@ def generate_data(
             }
             io_for_product[output_group] = (inputs, outputs)
         inputs, outputs = io_for_product[output_group]
-        group = grouped.get_group(((dt1_bin_product, run_index)))
+        group = grouped.get_group(((*output_group, run_index)))
         for window in sliding_window(group.iloc, window_size=window_size+1):
             last_value = window.pop()
             each_input = []

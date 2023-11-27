@@ -13,7 +13,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
-from generic_tools.misc import simplify_names, pascal_case_with_spaces, excel_datetime_to_unixtime_converter, get_columns, split_csv_into_column_files, interpolate, hours_to_seconds, seconds_to_hours, Duration
+from generic_tools.misc import simplify_names, pascal_case_with_spaces, excel_datetime_to_unixtime_converter, get_columns, split_csv_into_column_files, interpolate, hours_to_seconds, seconds_to_hours, Duration, sliding_window
 from generic_tools.plotting import graph_lines
 
 from __dependencies__.informative_iterator import ProgressBar

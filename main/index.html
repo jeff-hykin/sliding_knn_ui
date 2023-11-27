@@ -793,6 +793,16 @@
         // 
         // tools
         // 
+                const postJson = ({ data = null, to = null }) =>
+                    fetch(to, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    }).then(res=>res.json())
+                
                 function mergeStyles(element, style) {
                     if (style) {
                         const helper = html`<div style=${style}/>`
@@ -936,6 +946,7 @@
                             outline: none;
                             cursor: pointer;
                             transition: box-shadow 0.2s;
+                            min-height: 2.5rem;
                         `}"
                         ...${other}
                         >
@@ -1008,43 +1019,128 @@
                 Button,
                 Grid,
                 Settings({ children }) {
+                    const dynamicInputs = html`<Container/>`
+                    let inputGroupsElement, formElement
+                    const updateImportanceList = ()=>{
+                        const latestNames = inputGroupsElement.value.split(",").filter(each=>each)
+                        const children = [...dynamicInputs.children]
+                        const nameToElement = {}
+                        // keep ordering the same
+                        for (const name of latestNames) {
+                            nameToElement[name] = null
+                        }
+                        for (const child of children) {
+                            const inputElement = child.querySelector("input")
+                            if (inputElement && latestNames.includes(inputElement.name)) {
+                                nameToElement[inputElement.name] = child
+                            }
+                        }
+                        for (const name of latestNames) {
+                            if (!nameToElement[name]) {
+                                nameToElement[name] = html`<div>
+                                    <label>Relative Importance of ${name}</label>
+                                    <input type="number" name="${name}" step="0.01" min="0" max="1" value=1 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
+                                </div>`
+                            }
+                        }
+                        removeAllChildElements(dynamicInputs)
+                        for (const [key, value] of Object.entries(nameToElement)) {
+                            dynamicInputs.appendChild(value)
+                        }
+                    }
                     const element = html`
-                        <form
-                            action=""
-                            method="post"
-                            display=flex
-                            flex-direction=column
-                            gap=0.5rem
-                            padding=1rem
-                            background=white
-                            border-radius=1rem
-                            box-shadow="0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"
-                            margin=1rem
-                            flex-basis=1
-                            min-width=21rem
-                            >
-                                <label for="datetimeColumn">Name of Datetime Column</label>
-                                <input type="text" name="datetimeColumn" required background=whitesmoke border-radius=0.2rem border=none value="datetime" margin-bottom=1.5rem>
-                                
-                                <label for="maxHoursGap">Max Gap Size (Hours)</label>
-                                <input type="number" name="maxHoursGap" min="1" required background=whitesmoke border-radius=0.2rem border=none value=4 margin-bottom=1.5rem>
-                                
-                                <label for="windowSize">Window Size:</label>
-                                <input type="number" name="windowSize" min="1" required background=whitesmoke border-radius=0.2rem border=none value=10 margin-bottom=1.5rem>
+                        <Container column horizontalAlignment=center>
+                            ${formElement = html`<for
+                                display=flex
+                                flex-direction=column
+                                align-items="flex-start"
+                                gap=0.5rem
+                                padding=1rem
+                                background=white
+                                border-radius=1rem
+                                box-shadow="0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"
+                                margin=1rem
+                                flex-basis=1
+                                min-width=21rem
+                                max-height=80vh
+                                overflow=auto
+                                >
+                                    <label for="datetimeColumn">Name of Datetime Column</label>
+                                    <input type="text" name="datetimeColumn" required background=whitesmoke border-radius=0.2rem border=none value="datetime" margin-bottom=1.5rem>
+                                    
+                                    <label for="maxHoursGap">Max Gap Size (Hours)</label>
+                                    <input type="number" name="maxHoursGap" min="1" required background=whitesmoke border-radius=0.2rem border=none value=4 margin-bottom=1.5rem>
+                                    
+                                    <label for="numberOfNeighbors">Number of Neighbors</label>
+                                    <input type="number" name="numberOfNeighbors" min="1" required background=whitesmoke border-radius=0.2rem border=none value=3 margin-bottom=1.5rem>
+                                    
+                                    <label for="windowSize">Window Size:</label>
+                                    <input type="number" name="windowSize" min="1" required background=whitesmoke border-radius=0.2rem border=none value=10 margin-bottom=1.5rem>
 
-                                <label for="importanceDecay">Importance Decay (between 0 and 1)</label>
-                                <input type="number" name="importanceDecay" step="0.01" min="0" max="1" value=0.7 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
-                                
-                                <label for="outputGroups">Output Groups (comma-separated)</label>
-                                <input type="text" name="outputGroups" required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
-                                
-                                <Button type="submit" onClick=${(event)=>{window.element = element; window.event=event}}>
-                                    Train Model
-                                </Button>
-                        </form>
+                                    <label for="importanceDecay">Importance Decay (between 0 and 1)</label>
+                                    <input type="number" name="importanceDecay" step="0.01" min="0" max="1" value=0.7 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
+                                    
+                                    <label for="outputGroups">Output Groups (comma-separated)</label>
+                                    <input
+                                        type="text"
+                                        name="outputGroups"
+                                        required
+                                        background=whitesmoke
+                                        border-radius=0.2rem
+                                        border=none
+                                        margin-bottom=1.5rem
+                                        >
+                                        
+                                    <label for="inputGroups">Input Groups (comma-separated)</label>
+                                    ${inputGroupsElement = html`<input
+                                        type="text"
+                                        name="inputGroups"
+                                        required
+                                        background=whitesmoke
+                                        border-radius=0.2rem
+                                        border=none
+                                        margin-bottom=1.5rem
+                                        onInput=${updateImportanceList}
+                                        >`}
+                                    
+                                    <h5>Relative Importances</h5>
+                                    ${dynamicInputs}
+                                    
+                            </form>`}
+                            <Button
+                                type="submit"
+                                onClick=${(event)=>{
+                                    const inputs = [...formElement.children].filter(each=>each.tagName=="INPUT")
+                                    const response = Object.fromEntries(inputs.map(each=>{
+                                        if (each.type == "number") {
+                                            return [each.name, each.value-0]
+                                        } else {
+                                            return [each.name, each.value]
+                                        }
+                                    }))
+                                    console.log(`inputs is:`,inputs)
+                                    response.outputGroups = response.outputGroups.split(",")
+                                    response.inputImportance = Object.fromEntries(
+                                        [...dynamicInputs.children].map(each=>{
+                                            const element = each.querySelector("input")
+                                            return [element.name, element.value-0]
+                                        })
+                                    )
+                                    console.log(`JSON.stringify(response,0,4) is:`,JSON.stringify(response,0,4))
+                                    postJson({data:response, to:"/run_prediction"}).then(response=>{
+                                        grid3.updateData({
+                                            columns: Object.keys(response),
+                                            data: [Object.values(response)],
+                                        })      
+                                    })
+                                }}
+                                >
+                                Train Model
+                            </Button>
+                        </Container>
                     `
                     // cache inputs to localStorage
-                    for (const each of [...element.children]) {
+                    for (const each of [...formElement.children]) {
                         if (each.tagName == "INPUT") {
                             const localStorageName = `settings:${each.name}`
                             each.addEventListener("input", (event)=>{
@@ -1061,6 +1157,7 @@
                             }
                         }
                     }
+                    updateImportanceList()
                     return element
                 },
                 UploadFileButton({style, backendEndpoint, responseHandler, children}) {
@@ -1105,7 +1202,7 @@
     // Main Code
     // 
     // 
-    let grid1, grid2
+    let grid1, grid2, grid3
     document.body = html`
         <body font-size=15px min-height=100vh min-width=100vw background="var(--soft-gray-gradient)">
             <Container padding=1rem width=100% row wrap height="fit-content" width="100%" background="var(--soft-gray-gradient)" gap=2rem>
@@ -1136,6 +1233,9 @@
                     <div height=4rem min-height=1.5rem />
                     <h4 color=${`var(--charcoal)`}>Preview of Predict Data</h4>
                     ${grid2 = html`<Grid max-width=100% padding-bottom=1rem />`}
+                    <div height=4rem min-height=1.5rem />
+                    <h4 color=${`var(--charcoal)`}>Prediction</h4>
+                    ${grid3 = html`<Grid max-width=100% padding-bottom=1rem />`}
                 </Container>
             </Container>
         </body>
