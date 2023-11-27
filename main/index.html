@@ -793,6 +793,15 @@
         // 
         // tools
         // 
+                function mergeStyles(element, style) {
+                    if (style) {
+                        const helper = html`<div style=${style}/>`
+                        const theyreActuallyKeys = Object.values(helper.style) 
+                        for (const key of theyreActuallyKeys) {
+                            element.style[key] = helper.style[key]
+                        }
+                    }
+                }
                 function removeAllChildElements(parentElement) {
                     while (parentElement.firstChild) {
                         parentElement.removeChild(parentElement.firstChild);
@@ -899,6 +908,7 @@
                         transition: opacity 1s, transform 0.5s;
                     `}
                     />`
+                const helper = html`<button style=${style} />`
                 const element = html`
                     <button
                         type="button"
@@ -934,6 +944,7 @@
                             ${after}
                     </button>
                 `
+                mergeStyles(element, style)
                 addDynamicStylerFlags(
                     element,
                     [
@@ -973,8 +984,8 @@
                 return element
             }
             
-            const Grid = ({style, data})=> {
-                const element = document.createElement("div")
+            const Grid = ({style, data, ...other})=> {
+                const element = html`<div style=${style}  ...${other} />`
                 window.grid = element
                 element.grid = new gridjs.Grid({
                     columns: [],
@@ -1009,6 +1020,7 @@
                             border-radius=1rem
                             box-shadow="0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"
                             margin=1rem
+                            flex-basis=1
                             min-width=21rem
                             >
                                 <label for="datetimeColumn">Name of Datetime Column</label>
@@ -1027,7 +1039,7 @@
                                 <input type="text" name="outputGroups" required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
                                 
                                 <Button type="submit" onClick=${(event)=>{window.element = element; window.event=event}}>
-                                    Submit
+                                    Train Model
                                 </Button>
                         </form>
                     `
@@ -1096,25 +1108,35 @@
     let grid1, grid2
     document.body = html`
         <body font-size=15px min-height=100vh min-width=100vw background="var(--soft-gray-gradient)">
-            <Container padding=1rem width=100% row wrap height="fit-content" width="100%" background="var(--soft-gray-gradient)" horizontalAlignment="space-evenly">
-                <UploadFileButton backendEndpoint="/set_training_data">
-                    Upload Training Data
+            <Container padding=1rem width=100% row wrap height="fit-content" width="100%" background="var(--soft-gray-gradient)" gap=2rem>
+                <UploadFileButton
+                    style="background-color: teal;"
+                    backendEndpoint="/set_training_data"
+                    responseHandler=${({preview, ...other})=>{
+                        grid1.updateData(preview)
+                    }}
+                    >
+                        Upload Training Data
                 </UploadFileButton>
                 <UploadFileButton
                     backendEndpoint="/set_predict_data"
                     responseHandler=${({preview, ...other})=>{
-                        console.log(`other is:`,other)
-                        console.log(`preview is:`,preview)
-                        grid1.updateData(preview)
+                        grid2.updateData(preview)
                     }}
                     >
                         Upload Predict Data
                 </UploadFileButton>
             </Container>
             
-            <Container row height="fit-content" width="100%">
+            <Container row height="fit-content" width="100%" overflow=hidden >
                 <Settings />
-                ${grid1 = html`<Grid />`}
+                <Container column height="fit-content" width="100%" max-height=90vh overflow=auto flex-basis=4 padding=1rem>
+                    <h4 color=${`var(--charcoal)`}>Preview of Training Data</h4>
+                    ${grid1 = html`<Grid max-width=100% min-height=10rem max-height=40vh overflow=auto padding-bottom=1rem />`}
+                    <div height=4rem min-height=1.5rem />
+                    <h4 color=${`var(--charcoal)`}>Preview of Predict Data</h4>
+                    ${grid2 = html`<Grid max-width=100% padding-bottom=1rem />`}
+                </Container>
             </Container>
         </body>
     `

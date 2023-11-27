@@ -10,7 +10,12 @@ global_state = LazyDict(
 
 def handle_incoming_training_file(data_bytes):
     df = pandas.read_csv(data_bytes, sep=",")
+    df = Transformers.simplify_column_names(df)
+    for each_column in df.columns:
+        df = Transformers.attempt_force_numeric(df, each_column)
+        df[each_column] = df[each_column].interpolate(method='linear')
     global_state.training_df = df
+    return df
 
 def handle_incoming_predict_df(data_bytes):
     df = pandas.read_csv(data_bytes, sep=",")
