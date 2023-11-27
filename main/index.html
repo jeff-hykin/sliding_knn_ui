@@ -793,16 +793,40 @@
         // 
         // tools
         // 
+                function removeAllChildElements(parentElement) {
+                    while (parentElement.firstChild) {
+                        parentElement.removeChild(parentElement.firstChild);
+                    }
+                }
                 const helperElement = document.createElement("div")
                 helperElement.setAttribute("note", "STUFF WILL BREAK IF YOU DELETE ME")
                 helperElement.setAttribute("style", "position: fixed; top: 0; left: 0;")
                 window.addEventListener("load", ()=>document.body.prepend(helperElement))
                 const askForFiles = async ()=>{
                     return new Promise((resolve, reject)=>{
+                        let value = null
+                        let waitValue
+                        let hasResolved = false
                         const cleanResolve = (returnValue)=>{
-                            resolve(returnValue)
-                            window.removeEventListener("focus", listener)
+                            value = returnValue
+                            if (hasResolved) {
+                                return
+                            }
+                            if (!waitValue && returnValue.length == 0){
+                                waitValue = setTimeout(()=>{
+                                    if (!hasResolved) {
+                                        hasResolved = true
+                                        resolve(value)
+                                    }
+                                }, 200)
+                            } else {
+                                clearTimeout(waitValue)
+                                hasResolved = true
+                                resolve(value)
+                            }
+                            
                             try {
+                                window.removeEventListener("focus", listener)
                                 helperElement.removeChild(filePicker)
                             } catch (error) {
                                 
@@ -951,16 +975,18 @@
             
             const Grid = ({style, data})=> {
                 const element = document.createElement("div")
-                new gridjs.Grid({
-                    columns: ["Name", "Email", "Phone Number"],
-                    data: data || [
-                        ["John", "john@example.com", "(353) 01 222 3333"],
-                        ["Mark", "mark@gmail.com", "(01) 22 888 4444"],
-                        ["Eoin", "eoin@gmail.com", "0097 22 654 00033"],
-                        ["Sarah", "sarahcdd@gmail.com", "+322 876 1233"],
-                        ["Afshin", "afshin@mail.com", "(353) 22 87 8356"]
-                    ]
+                window.grid = element
+                element.grid = new gridjs.Grid({
+                    columns: [],
+                    data: [],
                 }).render(element)
+                element.updateData = (newData)=>{
+                    removeAllChildElements(element)
+                    setTimeout(()=>{
+                        element.grid = new gridjs.Grid({columns: [], data:[],...newData }).render(element)
+                        element.grid.forceRender()
+                    }, 1000)
+                }
                 return element
             }
         // 
@@ -1030,7 +1056,6 @@
                         style=${style}
                         onClick=${
                             (event)=>{
-                                console.log(`event is:`,event)
                                 askForFiles().then((files)=>{
                                     if (files.length > 0) {
                                         const file = files[0];
@@ -1046,8 +1071,9 @@
                                             body: formData
                                         })
                                         .then(response => response.json())
-                                        .then(responseHandler||(data => {
+                                        .then((data => {
                                             console.log('File uploaded successfully:', data);
+                                            responseHandler(data)
                                         }))
                                         .catch(error => {
                                             console.error('Error uploading file:', error);
@@ -1067,23 +1093,32 @@
     // Main Code
     // 
     // 
+    let grid1, grid2
     document.body = html`
         <body font-size=15px min-height=100vh min-width=100vw background="var(--soft-gray-gradient)">
             <Container padding=1rem width=100% row wrap height="fit-content" width="100%" background="var(--soft-gray-gradient)" horizontalAlignment="space-evenly">
                 <UploadFileButton backendEndpoint="/set_training_data">
                     Upload Training Data
                 </UploadFileButton>
-                <UploadFileButton backendEndpoint="/set_predict_data">
-                    Upload Predict Data
+                <UploadFileButton
+                    backendEndpoint="/set_predict_data"
+                    responseHandler=${({preview, ...other})=>{
+                        console.log(`other is:`,other)
+                        console.log(`preview is:`,preview)
+                        grid1.updateData(preview)
+                    }}
+                    >
+                        Upload Predict Data
                 </UploadFileButton>
             </Container>
             
             <Container row height="fit-content" width="100%">
                 <Settings />
-                <Grid />
+                ${grid1 = html`<Grid />`}
             </Container>
         </body>
     `
+    window.grid = grid1
     document.body.animate(...fadeIn)
 </script>
 </html>

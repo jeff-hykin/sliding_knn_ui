@@ -1,5 +1,6 @@
 import sys
 import os
+import pandas
 
 from specific_tools import Transformers, LazyDict
 
@@ -13,7 +14,12 @@ def handle_incoming_training_file(data_bytes):
 
 def handle_incoming_predict_df(data_bytes):
     df = pandas.read_csv(data_bytes, sep=",")
+    df = Transformers.simplify_column_names(df)
+    for each_column in df.columns:
+        df = Transformers.attempt_force_numeric(df, each_column)
+        df[each_column] = df[each_column].interpolate(method='linear')
     global_state.predict_df = df
+    return df
 
 def run_training(conditions):
     conditions["number_of_neighbors"] = conditions.get("number_of_neighbors", 3)

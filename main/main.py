@@ -6,7 +6,8 @@ import argparse
 import math
 import asyncio
 from time import time as now
-
+import pandas
+import simplejson as json
 
 from modeling import handle_incoming_training_file, handle_incoming_predict_df, run_training, run_prediction
 
@@ -66,11 +67,14 @@ async def set_predict_data(request : web.Request):
     try:
         post_result = await request.post()
         large_file = post_result.get("file")
-        handle_incoming_predict_df(large_file.file)
+        df = handle_incoming_predict_df(large_file.file)
     except Exception as error:
         return web.Response(text=f'''{{"success":false, "error": {json.dumps(f"{error}")} }}''')
-        
-    return web.Response(text='''{"success":true}''')
+    
+    columns = df.columns.tolist()
+    data = [ each.tolist() for each in df.iloc[0:10].values ]
+    result = json.dumps(dict(columns=columns,data=data, ), ignore_nan=True)
+    return web.Response(text=f'''{{"success":true, "preview":{result} }}''')
 
 @routes.post('/run_prediction')
 async def run_prediction(request : web.Request):
