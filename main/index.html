@@ -793,6 +793,15 @@
         // 
         // tools
         // 
+                const showError = (message)=>{
+                    new Toastify({
+                        text: message,
+                        position: 'right',
+                        backgroundColor: "#ef6c00",
+                        gravity: "bottom",
+                        duration: 8000,
+                    }).showToast()
+                }
                 const postJson = ({ data = null, to = null }) =>
                     fetch(to, {
                         method: 'POST',
@@ -1713,6 +1722,7 @@
                                             responseHandler(data)
                                         }))
                                         .catch(error => {
+                                            showError(`${error}`)
                                             console.error('Error uploading file:', error);
                                         });
                                     }
