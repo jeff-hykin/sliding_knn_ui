@@ -9,7 +9,7 @@ from time import time as now
 import pandas
 import simplejson as json
 
-from modeling import handle_incoming_training_file, handle_incoming_predict_df, run_training, run_prediction
+from modeling import global_state, handle_incoming_training_file, handle_incoming_predict_df, run_training, run_prediction, super_hash
 # TODO:
     # render output response
     # add warnings/errors
@@ -86,6 +86,7 @@ async def set_predict_data(request : web.Request):
 async def run_prediction_endpoint(request : web.Request):
     try:
         data = await request.text()
+        conditions_hash = super_hash(data)
         values = json.loads(data)
         kwargs = {}
         kwargs['number_of_neighbors']  = values['numberOfNeighbors']
@@ -96,16 +97,55 @@ async def run_prediction_endpoint(request : web.Request):
         kwargs['output_groups']        = values['outputGroups']
         kwargs['input_importance']     = values['inputImportance']
         print(f'''values = {values}''')
-        run_training(kwargs)
+        global_state.conditions_hash = conditions_hash
+        global_state.conditions = kwargs
+        global_state.conditions, global_state.models = run_training()
         output = run_prediction()
     except Exception as error:
-        print('error = ', type(error))
-        print('error = ', error)
-        raise error
-        return web.Response(text=json.dumps(dict(error=f"{error}"), ignore_nan=True))
+        import traceback
+        print('error:', error)
+        print(''.join(traceback.format_exception(error)))
+        if "'LazyDict' object has no attribute 'training_df_hash'" in f"{error}":
+            return web.Response(text=json.dumps(dict(success=False, error=f"Need to upload training data first"), ignore_nan=True))
+        elif "'LazyDict' object has no attribute 'predict_df'" in f"{error}":
+            return web.Response(text=json.dumps(dict(success=False, error=f"Need to upload recent data first"), ignore_nan=True))
+        else:
+            return web.Response(text=json.dumps(dict(success=False, error=f"{error}"), ignore_nan=True))
     
-    return web.Response(text=json.dumps(output, ignore_nan=True))
+    return web.Response(text=json.dumps(dict(success=True, data=output), ignore_nan=True))
 
+
+@routes.post('/start_repl')
+async def replset_predict_data(request : web.Request):
+    import code; code.interact(local={**globals(),**locals()})
+    return web.Response(text="{}", ignore_nan=True)
+
+def traceback_to_string(traceback):
+    import traceback as traceback_module
+    from io import StringIO
+    string_stream = StringIO()
+    traceback_module.print_tb(traceback, limit=None, file=string_stream)
+    return string_stream.getvalue()
+
+def get_trace(level=0):
+    import sys
+    import types
+    try:
+        raise Exception(f'''''')
+    except:
+        traceback = sys.exc_info()[2]
+        back_frame = traceback.tb_frame
+        for each in range(level+1):
+            back_frame = back_frame.f_back
+    traceback = types.TracebackType(
+        tb_next=None,
+        tb_frame=back_frame,
+        tb_lasti=back_frame.f_lasti,
+        tb_lineno=back_frame.f_lineno
+    )
+    return traceback
+    
+    
 # 
 # start server
 # 

@@ -793,6 +793,21 @@
         // 
         // tools
         // 
+                const localStorageListener = (name,element)=>{
+                    const localStorageName = `settings:${name}`
+                    let value
+                    try {
+                        value = localStorage.getItem(localStorageName)
+                    } catch (error) {
+                        
+                    }
+                    if (value != null) {
+                        element.value = value
+                    }
+                    return (event)=>{
+                        localStorage.setItem(localStorageName, event.target.value)
+                    }
+                }
                 const showError = (message)=>{
                     new Toastify({
                         text: message,
@@ -810,7 +825,17 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(data)
-                    }).then(res=>res.json())
+                    }).then(res=>res.text()).catch(error => {
+                        showError(`${error}`)
+                        console.error('Error on postJson:', error);
+                    }).then((text)=>{
+                        try {
+                            return JSON.parse(text)
+                        } catch (error) {
+                            showError(`Couldn't parse the response as JSON:\n${text}`)
+                            throw error
+                        }
+                    })
                 
                 function mergeStyles(element, style) {
                     if (style) {
@@ -1551,40 +1576,38 @@
         // 
         // custom elements import
         // 
+            let dynamicInputs
+            let dateTimeInput
             const { html } = window.Elemental({
                 Container: ContainerLibrary,
                 Button,
                 Grid,
                 Settings({ children }) {
-                    const dynamicInputs = html`<Container/>`
+                    dynamicInputs = html`<Container id=thing />`
                     let inputGroupsElement, formElement
-                    const updateImportanceList = ()=>{
-                        const latestNames = inputGroupsElement.value.split(",").filter(each=>each)
-                        const children = [...dynamicInputs.children]
-                        const nameToElement = {}
-                        // keep ordering the same
-                        for (const name of latestNames) {
-                            nameToElement[name] = null
-                        }
-                        for (const child of children) {
-                            const inputElement = child.querySelector("input")
-                            if (inputElement && latestNames.includes(inputElement.name)) {
-                                nameToElement[inputElement.name] = child
-                            }
-                        }
-                        for (const name of latestNames) {
-                            if (!nameToElement[name]) {
-                                nameToElement[name] = html`<div>
-                                    <label>Relative Importance of ${name}</label>
-                                    <input type="number" name="${name}" step="0.01" min="0" max="1" value=1 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
-                                </div>`
-                            }
-                        }
-                        removeAllChildElements(dynamicInputs)
-                        for (const [key, value] of Object.entries(nameToElement)) {
-                            dynamicInputs.appendChild(value)
-                        }
-                    }
+                    // const updateImportanceList = ()=>{
+                    //     const latestNames = inputGroupsElement.value.split(",").filter(each=>each)
+                    //     const children = [...dynamicInputs.children]
+                    //     const nameToElement = {}
+                    //     // keep ordering the same
+                    //     for (const name of latestNames) {
+                    //         nameToElement[name] = null
+                    //     }
+                    //     for (const child of children) {
+                    //         const inputElement = child.querySelector("input")
+                    //         if (inputElement && latestNames.includes(inputElement.name)) {
+                    //             nameToElement[inputElement.name] = child
+                    //         }
+                    //     }
+                    //     for (const name of latestNames) {
+                    //         if (!nameToElement[name]) {
+                    //             nameToElement[name] = html`<div>
+                    //                 <label>Relative Importance of ${name}</label>
+                    //                 <input type="number" name="${name}" step="0.01" min="0" max="1" value=1 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
+                    //             </div>`
+                    //         }
+                    //     }
+                    // }
                     const element = html`
                         <Container column horizontalAlignment=center>
                             ${formElement = html`<for
@@ -1603,7 +1626,7 @@
                                 overflow=auto
                                 >
                                     <label for="datetimeColumn">Name of Datetime Column</label>
-                                    <input type="text" name="datetimeColumn" required background=whitesmoke border-radius=0.2rem border=none value="datetime" margin-bottom=1.5rem>
+                                    ${dateTimeInput = html`<input type="text" name="datetimeColumn" required background=whitesmoke border-radius=0.2rem border=none value="datetime" margin-bottom=1.5rem>`}
                                     
                                     <label for="maxHoursGap">Max Gap Size (Hours)</label>
                                     <input type="number" name="maxHoursGap" min="1" required background=whitesmoke border-radius=0.2rem border=none value=4 margin-bottom=1.5rem>
@@ -1614,10 +1637,10 @@
                                     <label for="windowSize">Window Size:</label>
                                     <input type="number" name="windowSize" min="1" required background=whitesmoke border-radius=0.2rem border=none value=10 margin-bottom=1.5rem>
 
-                                    <label for="importanceDecay">Importance Decay (between 0 and 1)</label>
+                                    <label for="importanceDecay">Importance Decay per Timestep (between 0 and 1)</label>
                                     <input type="number" name="importanceDecay" step="0.01" min="0" max="1" value=0.7 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
                                     
-                                    <label for="outputGroups">Output Groups (comma-separated)</label>
+                                    <label for="outputGroups">Product Column(s)</label>
                                     <input
                                         type="text"
                                         name="outputGroups"
@@ -1627,20 +1650,9 @@
                                         border=none
                                         margin-bottom=1.5rem
                                         >
-                                        
-                                    <label for="inputGroups">Input Groups (comma-separated)</label>
-                                    ${inputGroupsElement = html`<input
-                                        type="text"
-                                        name="inputGroups"
-                                        required
-                                        background=whitesmoke
-                                        border-radius=0.2rem
-                                        border=none
-                                        margin-bottom=1.5rem
-                                        onInput=${updateImportanceList}
-                                        >`}
                                     
-                                    <h5>Relative Importances</h5>
+                                    <h5>Input Columns</h5>
+                                    <span>(use 0 importance to ignore a column)</span>
                                     ${dynamicInputs}
                                     
                             </form>`}
@@ -1648,7 +1660,7 @@
                                 type="submit"
                                 onClick=${(event)=>{
                                     const inputs = [...formElement.children].filter(each=>each.tagName=="INPUT")
-                                    const response = Object.fromEntries(inputs.map(each=>{
+                                    const message = Object.fromEntries(inputs.map(each=>{
                                         if (each.type == "number") {
                                             return [each.name, each.value-0]
                                         } else {
@@ -1656,19 +1668,44 @@
                                         }
                                     }))
                                     console.log(`inputs is:`,inputs)
-                                    response.outputGroups = response.outputGroups.split(",")
-                                    response.inputImportance = Object.fromEntries(
+                                    message.outputGroups = message.outputGroups.split(",")
+                                    if (message.outputGroups[0].length == 0) {
+                                        showError(`please input the product column name(s)`)
+                                        return
+                                    }
+                                    message.inputImportance = Object.fromEntries(
                                         [...dynamicInputs.children].map(each=>{
                                             const element = each.querySelector("input")
                                             return [element.name, element.value-0]
-                                        })
+                                        }).filter(([key,value])=>value>0)
                                     )
-                                    console.log(`JSON.stringify(response,0,4) is:`,JSON.stringify(response,0,4))
-                                    postJson({data:response, to:"/run_prediction"}).then(response=>{
-                                        grid3.updateData({
-                                            columns: Object.keys(response),
-                                            data: [Object.values(response)],
-                                        })      
+                                    new Toastify({
+                                        text: `Training model (might take a bit)`,
+                                        position: 'right',
+                                        background: "cornflowerblue",
+                                        gravity: "bottom",
+                                        duration: 2000,
+                                    }).showToast()
+                                    console.log(`JSON.stringify(message,0,4) is:`,JSON.stringify(message,0,4))
+                                    
+                                    postJson({data:message, to:"/run_prediction"}).then(response=>{
+                                        if (response.success) {
+                                            const data = response.data
+                                            grid3.updateData({
+                                                columns: Object.keys(response),
+                                                data: [Object.values(response)],
+                                            })
+                                            
+                                            new Toastify({
+                                                text: `Prediction finished!`,
+                                                position: 'right',
+                                                backgroundColor: "cornflowerblue",
+                                                gravity: "bottom",
+                                                duration: Infinity,
+                                            }).showToast()
+                                        } else {
+                                            showError(response.error)
+                                        }
                                     })
                                 }}
                                 >
@@ -1679,22 +1716,11 @@
                     // cache inputs to localStorage
                     for (const each of [...formElement.children]) {
                         if (each.tagName == "INPUT") {
-                            const localStorageName = `settings:${each.name}`
-                            each.addEventListener("input", (event)=>{
-                                localStorage.setItem(localStorageName, event.target.value)
-                            })
-                            let value
-                            try {
-                                value = localStorage.getItem(localStorageName)
-                            } catch (error) {
-                                
-                            }
-                            if (value != null) {
-                                each.value = value
-                            }
+                            each.addEventListener("input", localStorageListener(`settings:${each.name}`,each))
                         }
                     }
-                    updateImportanceList()
+                    element.id = "thing2"
+                    // updateImportanceList()
                     return element
                 },
                 UploadFileButton({style, backendEndpoint, responseHandler, children}) {
@@ -1724,7 +1750,7 @@
                                         .catch(error => {
                                             showError(`${error}`)
                                             console.error('Error uploading file:', error);
-                                        });
+                                        })
                                     }
                                 })
                             }
@@ -1748,7 +1774,42 @@
                     style="background-color: teal;"
                     backendEndpoint="/set_training_data"
                     responseHandler=${({preview, ...other})=>{
-                        grid1.updateData(preview)
+                        if (!other.success) {
+                            showError(other.error)
+                        } else {
+                            grid1.updateData(preview)
+                            removeAllChildElements(dynamicInputs)
+                            console.log(`preview.columns is:`,preview.columns)
+                            for (const eachColumnName of preview.columns) {
+                                if (eachColumnName == dateTimeInput.value || eachColumnName == dateTimeInput.value.trim()) {
+                                    continue
+                                }
+                                const inputElement = html`
+                                    <input
+                                        type="number"
+                                        name="${eachColumnName}"
+                                        step="0.01"
+                                        min="0"
+                                        max="1"
+                                        value=0
+                                        required
+                                        background=whitesmoke
+                                        border-radius=0.2rem
+                                        border=none
+                                        margin-bottom=1.5rem
+                                        >
+                                `
+                                inputElement.addEventListener("input", localStorageListener(`settings:predictColumn:${eachColumnName}`, inputElement))
+                                dynamicInputs.appendChild( html`
+                                    <Container>
+                                        <span>
+                                            Importance of ${eachColumnName}
+                                        </span>
+                                        ${inputElement}
+                                    </Container>
+                                `)
+                            }
+                        }
                     }}
                     >
                         Upload Training Data
@@ -1756,24 +1817,28 @@
                 <UploadFileButton
                     backendEndpoint="/set_predict_data"
                     responseHandler=${({preview, ...other})=>{
-                        grid2.updateData(preview)
+                        if (!other.success) {
+                            showError(other.error)
+                        } else {
+                            grid2.updateData(preview)
+                        }
                     }}
                     >
-                        Upload Predict Data
+                        Upload Recent Data
                 </UploadFileButton>
             </Container>
             
             <Container row height="fit-content" width="100%" overflow=hidden >
                 <Settings />
                 <Container column height="fit-content" width="100%" max-height=90vh overflow=auto flex-basis=4 padding=1rem>
+                    <h4 color=${`var(--charcoal)`}>Prediction</h4>
+                    ${grid3 = html`<Grid max-width=100% padding-bottom=1rem />`}
                     <h4 color=${`var(--charcoal)`}>Preview of Training Data</h4>
                     ${grid1 = html`<Grid max-width=100% min-height=10rem max-height=40vh overflow=auto padding-bottom=1rem />`}
                     <div height=4rem min-height=1.5rem />
-                    <h4 color=${`var(--charcoal)`}>Preview of Predict Data</h4>
+                    <h4 color=${`var(--charcoal)`}>Preview of Recent Data</h4>
                     ${grid2 = html`<Grid max-width=100% padding-bottom=1rem />`}
                     <div height=4rem min-height=1.5rem />
-                    <h4 color=${`var(--charcoal)`}>Prediction</h4>
-                    ${grid3 = html`<Grid max-width=100% padding-bottom=1rem />`}
                 </Container>
             </Container>
         </body>

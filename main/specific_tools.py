@@ -32,7 +32,7 @@ if True:
     info = find_and_load(
         "main/info.yaml", # walks up folders until it finds a file with this name
         cd_to_filepath=True, # helpful if using relative paths
-        fully_parse_args=True, # if you already have argparse, use parse_args=True instead
+        fully_parse_args=False, # if you already have argparse, use parse_args=True instead
         show_help_for_no_args=False, # change if you want
     )
     config  = info.config
