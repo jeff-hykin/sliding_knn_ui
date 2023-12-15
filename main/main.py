@@ -11,7 +11,15 @@ import simplejson as json
 
 from modeling import global_state, handle_incoming_training_file, handle_incoming_predict_df, run_training, run_prediction, super_hash
 # TODO:
-    # render output response
+    # use neo.py so that other columns are gained
+    # NOTE: when new settings changed, bust the model cache
+    # create a namespace
+        # homepage picks a namespace
+            # settings/namespace
+            # output/namespace
+                # have output.html refresh the backend every so often (setInterval)
+                # have a column filter
+        # create endpoint for updating settings and historical data
     # add warnings/errors
 
 # 
