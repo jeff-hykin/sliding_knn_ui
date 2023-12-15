@@ -31,6 +31,15 @@ app = web.Application(client_max_size=(1024 ** 2 * 100))
 routes = web.RouteTableDef()
 options = {} if not debugging else dict(logger=True, engineio_logger=True)
 sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins="*", **options); sio.attach(app)
+warning_message_buffer = []
+def warn(message):
+    warning_message_buffer.append(message)
+
+async def send_warnings():
+    warning_messages = list(warning_message_buffer)
+    warning_message_buffer.clear()
+    for each in warning_messages:
+        await sio.emit('backend_warning', each)
 
 if debugging: print('starting server') 
 
@@ -62,7 +71,7 @@ async def set_training_data(request : web.Request):
         df = handle_incoming_training_file(large_file.file)
     except Exception as error:
         return web.Response(text=f'''{{"success":false, "error": {json.dumps(f"{error}")} }}''')
-        
+    await send_warnings()
     columns = df.columns.tolist()
     data = [ each.tolist() for each in df.iloc[0:10].values ]
     result = json.dumps(dict(columns=columns,data=data, ), ignore_nan=True)
@@ -76,7 +85,7 @@ async def set_predict_data(request : web.Request):
         df = handle_incoming_predict_df(large_file.file)
     except Exception as error:
         return web.Response(text=f'''{{"success":false, "error": {json.dumps(f"{error}")} }}''')
-    
+    await send_warnings()
     columns = df.columns.tolist()
     data = [ each.tolist() for each in df.iloc[0:10].values ]
     result = json.dumps(dict(columns=columns,data=data, ), ignore_nan=True)
@@ -101,6 +110,7 @@ async def run_prediction_endpoint(request : web.Request):
         global_state.conditions = kwargs
         global_state.conditions, global_state.models = run_training()
         output = run_prediction()
+        await send_warnings()
     except Exception as error:
         import traceback
         print('error:', error)
@@ -144,7 +154,7 @@ def get_trace(level=0):
         tb_lineno=back_frame.f_lineno
     )
     return traceback
-    
+
     
 # 
 # start server

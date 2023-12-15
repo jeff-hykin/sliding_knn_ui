@@ -87,7 +87,6 @@ def run_prediction():
     print("end of run_prediction")
     print("end of run_prediction")
     print("end of run_prediction")
-    import code; code.interact(local={**globals(),**locals()})
     return {
         name: value
             for name, value in zip(outputs.columns, prediction[0])
@@ -178,7 +177,6 @@ def generate_data(
     print("end of generate_data")
     print("end of generate_data")
     print("end of generate_data")
-    import code; code.interact(local={**globals(),**locals()})
     return conditions, LazyDict({
         key: (pandas.DataFrame(inputs), pandas.DataFrame(outputs))
             for key, (inputs, outputs) in io_for_product.items()
