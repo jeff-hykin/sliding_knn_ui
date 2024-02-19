@@ -28,7 +28,10 @@ class Predictor:
         return self
     
     def load_historic_data(self, file):
-        df = pandas.read_csv(file, sep=",")
+        if not isinstance(file, pandas.DataFrame):
+            df = pandas.read_csv(file, sep=",")
+        else:
+            df = file
         historic_df = Predictor.enforce_numeric_and_interpolate(df, **self.kwargs)
         historic_runs_df = Predictor.add_run_index(historic_df, **self.kwargs)
         historic_runs_df, value_ranges = Predictor.train(historic_runs_df, **self.kwargs)
@@ -37,7 +40,10 @@ class Predictor:
         return self
     
     def load_recent_data(self, file):
-        df = pandas.read_csv(file, sep=",")
+        if not isinstance(file, pandas.DataFrame):
+            df = pandas.read_csv(file, sep=",")
+        else:
+            df = file
         recent_run_df = Predictor.enforce_numeric_and_interpolate(df, **self.kwargs)
         if isinstance(self.historic_runs_df, pandas.DataFrame):
             recent_run_df.drop(columns=[each for each in recent_run_df.columns if each not in self.historic_runs_df.columns], inplace=True)

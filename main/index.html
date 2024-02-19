@@ -1692,9 +1692,10 @@
                                     postJson({data:message, to:"/run_prediction"}).then(response=>{
                                         if (response.success) {
                                             const data = response.data
+                                            console.log(`data is:`,data)
                                             grid3.updateData({
-                                                columns: Object.keys(data),
-                                                data: [Object.values(data)],
+                                                columns: data.column_names,
+                                                data: data.rows,
                                             })
                                             
                                             new Toastify({
@@ -1710,7 +1711,7 @@
                                     })
                                 }}
                                 >
-                                Train Model
+                                Run Prediction
                             </Button>
                         </Container>
                     `

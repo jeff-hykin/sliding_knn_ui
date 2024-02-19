@@ -57,7 +57,8 @@ def run_training():
             model = KNeighborsRegressor(n_neighbors=conditions["number_of_neighbors"])
             model.fit(inputs, outputs)
             models[each_product] = model
-    except:
+    except Exception as error:
+        print("2")
         import code; code.interact(local={**globals(),**locals()})
     print("finished training")
     return conditions, models
@@ -81,7 +82,8 @@ def run_prediction():
         inputs, outputs = processed_io[output_kind]
         print("predicting")
         prediction = model.predict(inputs[:])
-    except:
+    except Exception as error:
+        print("1")
         import code; code.interact(local={**globals(),**locals()})
     
     print("end of run_prediction")
@@ -171,7 +173,8 @@ def generate_data(
                             last_value[each_input]
                         )
         assert len(io_for_product) != 0
-    except:
+    except Exception as error:
+        print("3")
         import code; code.interact(local={**globals(),**locals()})
     
     print("end of generate_data")
@@ -226,7 +229,7 @@ def validate_and_clean_dataframe(df, conditions):
     value_ranges    = conditions["value_ranges"]
     
     if datetime_column not in df.columns:
-        raise Exception(f'''It appears the given datetime column {repr(datetime_column)} was not one of the available columns: {df.columns}''')
+        raise Exception(f'''It appears the given datetime column {repr(datetime_column)} was not one of the available columns: {list(df.columns)}''')
     assert len(df) != 0, "It appears the provided data has no rows"
     # get the datetime
     df[datetime_column] = pandas.to_datetime(df[datetime_column], errors='coerce')
