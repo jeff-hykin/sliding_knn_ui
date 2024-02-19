@@ -1697,6 +1697,7 @@
                                                 columns: data.column_names,
                                                 data: data.rows,
                                             })
+                                            window.predictionData = [data.columns, data.rows].map(each=>each.join(",")).join("\n")
                                             
                                             new Toastify({
                                                 text: `Prediction finished!`,
@@ -1833,7 +1834,19 @@
             <Container row height="fit-content" width="100%" overflow=hidden >
                 <Settings />
                 <Container column height="fit-content" width="100%" max-height=90vh overflow=auto flex-basis=4 padding=1rem>
-                    <h4 color=${`var(--charcoal)`}>Most Similar Historic Run</h4>
+                    <h4 color=${`var(--charcoal)`}>
+                        Most Similar Historic Run
+                        <span style="font-size: 10pt; cursor: pointer; background: white; box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); border-radius: 14px; padding: 6px; margin-left: 0.5rem;" onclick=${()=>{
+                                let data = "data:text/csv;charset=utf-8," + encodeURIComponent(window.predictionData)
+                                let download = document.createElement('a')
+                                download.setAttribute('href', data)
+                                download.setAttribute('download', 'data.csv')
+                                download.click()
+                                download.remove()
+                            }}>
+                                Download
+                        </span>
+                    </h4>
                     ${grid3 = html`<Grid max-width=100% padding-bottom=1rem />`}
                     <h4 color=${`var(--charcoal)`}>Preview of Historic Data (Training Data)</h4>
                     ${grid1 = html`<Grid max-width=100% min-height=10rem max-height=40vh overflow=auto padding-bottom=1rem />`}

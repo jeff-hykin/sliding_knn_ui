@@ -127,7 +127,6 @@ class Predictor:
             value_ranges[each]["min"] = value_ranges.get(each,{}).get("min", df[each].values.min())
             value_ranges[each]["max"] = value_ranges.get(each,{}).get("max", df[each].values.max())
         
-        df = Predictor.noramlize(df, value_ranges)
         # df.sort_values(by=[datetime_column], inplace=True)
         df.sort_index()
         return df, value_ranges
@@ -153,15 +152,26 @@ class Predictor:
             historic_df_normalized[column] *= importance
             recent_df_noramlized[column] *= importance
         
-        historic_df_slim  = historic_df_normalized.drop(columns=[each for each in historic_df_normalized.columns if each not in input_importance])
-        recent_df_slim = recent_df_noramlized.drop(columns=[each for each in recent_df_noramlized.columns if each not in input_importance])
+        historic_df_slim  = historic_df_normalized.drop(columns=[each for each in historic_df_normalized.columns if each not in input_importance or input_importance[each] ==  0])
+        recent_df_slim = recent_df_noramlized.drop(columns=[each for each in recent_df_noramlized.columns if each not in input_importance or input_importance[each] ==  0])
+        common_columns = [ each for each in historic_df_slim.columns if each in recent_df_slim.columns ]
+        # ensure column names are in the same order (needed because of the numpy array convertion below)
+        historic_df_slim = historic_df_slim[common_columns]
+        recent_df_slim   = recent_df_slim[common_columns]
         
         distance_dfs = []
+        historic_slim_array = historic_df_slim.to_numpy()
         for index, each_row in enumerate(recent_df_slim.iloc):
             distance_dfs.append(
-                numpy.abs(historic_df_slim.to_numpy() - each_row.to_numpy()).sum(axis=1)
+                numpy.abs(historic_slim_array - each_row.to_numpy()).sum(axis=1)
             )
         distance_dfs = numpy.vstack(distance_dfs)
+        for index, each in enumerate(distance_dfs):
+            historic_df_normalized[f"__distance_{index}"] = each
+        historic_df_2 = historic_df.copy()
+        for index, each in enumerate(distance_dfs):
+            historic_df_2[f"__distance_{index}"] = each
+        
         try:
             # create row weights
             history_weights = []
@@ -193,7 +203,7 @@ class Predictor:
             historic_df_normalized["__true_distances"] = true_distances
             historic_df_normalized.sort_values(by=["__true_distances"])
             
-            # find the 3 cloesest runs
+            # find the cloesest runs
             minimum = min(dict(groups["__true_distances"].min()).values())
             items = dict(groups["__true_distances"].min()).items()
             
