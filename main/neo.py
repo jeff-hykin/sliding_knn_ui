@@ -9,10 +9,13 @@ predict_path = "/Users/jeffhykin/repos/primient/data/ethylex_dry_thin.predict.cs
 data_path = "/Users/jeffhykin/repos/primient/data/ethylex_dry_thin.groups.csv"
 
 from blissful_basics import LazyDict
-predictors = LazyDict().setdefault(lambda key: Predictor(key))
+settings = LazyDict(
+    default_warn=lambda each: each,
+)
+predictors = LazyDict().setdefault(lambda key: Predictor(namespace=key))
 class Predictor:
-    def __init__(self, namespace, warn=lambda each: each):
-        self.warn = warn
+    def __init__(self, namespace, warn=None):
+        self.warn = warn or settings.default_warn
         self.namespace = namespace
         self.kwargs = {}
         self.value_ranges = {}
