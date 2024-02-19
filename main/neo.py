@@ -6,9 +6,6 @@ import numpy as np
 from copy import copy
 from specific_tools import Transformers, LazyDict, sliding_window
 
-predict_path = "/Users/jeffhykin/repos/primient/data/ethylex_dry_thin.predict.csv"
-data_path = "/Users/jeffhykin/repos/primient/data/ethylex_dry_thin.groups.csv"
-
 from blissful_basics import LazyDict
 settings = LazyDict(
     default_warn=lambda each: each,
@@ -239,25 +236,25 @@ class Predictor:
     pass
 
 # 
-# setup
+# example
 # 
-kwargs = dict(
-    datetime_column="date",
-    max_hours_gap=4,
-    window_size=10,
-    importance_decay=0.7,
-    output_groups=[],
-    input_importance={
-        'dt1_acid_flow_gpm': 1.0,
-        'surge_moisture': 1.0,
-        'dt1_soda_ash_flow_hr': 1.0,
-        'dt1_soda_ash_flow_scaled_hr': 1.0,
-    },
-    number_of_neighbors=3,
-)
+    # kwargs = dict(
+    #     datetime_column="date",
+    #     max_hours_gap=4,
+    #     window_size=10,
+    #     importance_decay=0.7,
+    #     output_groups=[],
+    #     input_importance={
+    #         'dt1_acid_flow_gpm': 1.0,
+    #         'surge_moisture': 1.0,
+    #         'dt1_soda_ash_flow_hr': 1.0,
+    #         'dt1_soda_ash_flow_scaled_hr': 1.0,
+    #     },
+    #     number_of_neighbors=3,
+    # )
 
-eth = predictors["eth"].set_options(**kwargs)
-eth.set_options(**kwargs)
-eth.load_historic_data(data_path)
-eth.load_recent_data(predict_path)
-eth.get_nearest()
+    # eth = predictors["eth"].set_options(**kwargs)
+    # eth.set_options(**kwargs)
+    # eth.load_historic_data(data_path)
+    # eth.load_recent_data(predict_path)
+    # eth.get_nearest()
