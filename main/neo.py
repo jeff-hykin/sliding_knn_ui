@@ -3,6 +3,7 @@ import math
 import pandas
 import numpy
 import numpy as np
+from copy import copy
 from specific_tools import Transformers, LazyDict, sliding_window
 
 predict_path = "/Users/jeffhykin/repos/primient/data/ethylex_dry_thin.predict.csv"
@@ -133,25 +134,27 @@ class Predictor:
     
     @staticmethod
     def noramlize(df, value_ranges):
-        for each in value_ranges.keys():
+        for each in (each for each in value_ranges.keys() if each not in [ "__timestamp_hours", "__run_index", "date", "unix_timestamp" ]):
             df = Transformers.normalize(df, column=each, min_value=value_ranges[each]["min"], max_value=value_ranges[each]["max"])
         return df
     
     @staticmethod
-    def predict(historic_df, recent_df, value_ranges, input_importance, importance_decay, **other):
-        recent_df = Predictor.noramlize(recent_df, value_ranges)
-        historic_df = pandas.DataFrame(historic_df)
-        recent_df.sort_index()
-        historic_df.sort_index()
+    def predict(historic_df, recent_df, value_ranges, input_importance, importance_decay, datetime_column, **other):
+        recent_df_noramlized = copy(recent_df)
+        historic_df_normalized = copy(historic_df)
+        Predictor.noramlize(recent_df_noramlized, value_ranges)
+        Predictor.noramlize(historic_df_normalized, value_ranges)
+        recent_df_noramlized.sort_index()
+        historic_df_normalized.sort_index()
         # oldest date is index 0
         
         # apply column-level importance
         for column, importance in input_importance.items():
-            historic_df[column] *= importance
-            recent_df[column] *= importance
+            historic_df_normalized[column] *= importance
+            recent_df_noramlized[column] *= importance
         
-        historic_df_slim  = historic_df.drop(columns=[each for each in historic_df.columns if each not in input_importance])
-        recent_df_slim = recent_df.drop(columns=[each for each in recent_df.columns if each not in input_importance])
+        historic_df_slim  = historic_df_normalized.drop(columns=[each for each in historic_df_normalized.columns if each not in input_importance])
+        recent_df_slim = recent_df_noramlized.drop(columns=[each for each in recent_df_noramlized.columns if each not in input_importance])
         
         distance_dfs = []
         for index, each_row in enumerate(recent_df_slim.iloc):
@@ -170,8 +173,8 @@ class Predictor:
             history_weights = numpy.array(tuple(reversed(history_weights)))
             offsets = numpy.array(range(window_size))
             
-            true_distances = numpy.array([math.inf]*len(historic_df))
-            groups = historic_df.groupby("__run_index")
+            true_distances = numpy.array([math.inf]*len(historic_df_normalized))
+            groups = historic_df_normalized.groupby("__run_index")
             runs = list(groups.indices.keys())
             total_index = -1
             for run_index in runs:
@@ -187,8 +190,8 @@ class Predictor:
                     #     distance = distances_for_corrisponding_input_row[local_index]
                     #     summation += distance * relative_importance
                     # true_distances[total_index] = summation
-            historic_df["__true_distances"] = true_distances
-            historic_df.sort_values(by=["__true_distances"])
+            historic_df_normalized["__true_distances"] = true_distances
+            historic_df_normalized.sort_values(by=["__true_distances"])
             
             # find the 3 cloesest runs
             minimum = min(dict(groups["__true_distances"].min()).values())
@@ -200,7 +203,7 @@ class Predictor:
                     closest_run_index = each_key
                     break
             
-            closest_run = historic_df[historic_df["__run_index"] == closest_run_index]
+            closest_run = historic_df_normalized[historic_df["__run_index"] == closest_run_index]
             min_index = closest_run["__true_distances"].tolist().index(closest_run["__true_distances"].min())
             next_value = []
             for index_addition in range(window_size):
@@ -210,7 +213,10 @@ class Predictor:
                     )
                 except Exception as error:
                     break
-            future_slice = LazyDict(pandas.DataFrame(next_value).to_dict())
+            date_times = pandas.DataFrame(next_value)[datetime_column].values
+            # get the index of the historic_df where the datetime_column is equal to date_times[0]
+            index = historic_df_normalized[datetime_column].tolist().index(date_times[0])
+            future_slice = LazyDict(historic_df[index:index+len(date_times)].to_dict())
             # next_recommended_value = closest_run.iloc[min_index+1+index_addition]
             # import code; code.interact(local={**globals(),**locals()})
             return future_slice

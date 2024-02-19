@@ -293,6 +293,16 @@ class Transformers:
         return df
     
     @staticmethod
+    def unnormalize(df, column, min_value=None, max_value=None):
+        min_value = df[column].values.min() if type(min_value) == type(None) else min_value
+        max_value = df[column].values.max() if type(max_value) == type(None) else max_value
+        if max_value == min_value:
+            df[column] = max_value
+        else:
+            df[column] = ((max_value - min_value) * df[column])+min_value
+        return df
+    
+    @staticmethod
     def column_funcs_to_lines(column_funcs):
         lines = []
         for name, each in sorted(tuple(column_funcs.items())):
