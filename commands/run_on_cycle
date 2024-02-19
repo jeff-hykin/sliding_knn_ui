@@ -1,0 +1,20 @@
+# Infinite loop
+while true; do
+    # Start your process here
+    python ./main/neo_main.py &
+
+    # Save the process ID (PID) of the last background process
+    process_pid=$!
+
+    echo "Process started with PID: $process_pid"
+
+    # Sleep for 24 hours
+    sleep 24h
+
+    # Kill the process after 24 hours
+    echo "Killing process with PID: $process_pid"
+    kill $process_pid
+    wait $process_pid 2>/dev/null
+
+    echo "Process with PID $process_pid killed"
+done
