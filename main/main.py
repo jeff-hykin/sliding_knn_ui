@@ -106,10 +106,9 @@ async def run_prediction_endpoint(request : web.Request):
         conditions_hash = super_hash(data)
         values = json.loads(data)
         kwargs = {}
-        kwargs['number_of_neighbors']  = values['numberOfNeighbors']
+        kwargs['number_of_neighbors']  = values.get('numberOfNeighbors',1)
         kwargs['datetime_column']      = values['datetimeColumn']
         kwargs['max_hours_gap']        = values['maxHoursGap']
-        kwargs['window_size']          = values['windowSize']
         kwargs['importance_decay']     = values['importanceDecay']
         kwargs['output_groups']        = values['outputGroups']
         kwargs['input_importance']     = values['inputImportance']

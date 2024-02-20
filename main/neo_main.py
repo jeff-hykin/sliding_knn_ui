@@ -129,9 +129,9 @@ async def run_prediction_endpoint(request : web.Request):
         values = json.loads(data)
         kwargs = dict(
             datetime_column      = values['datetimeColumn'],
-            number_of_neighbors  = values['numberOfNeighbors'],
+            number_of_neighbors  = values.get('numberOfNeighbors', 1),
+            window_size          = values.get('windowSize', 5),
             max_hours_gap        = values['maxHoursGap'],
-            window_size          = values['windowSize'],
             importance_decay     = values['importanceDecay'],
             output_groups        = values['outputGroups'],
             input_importance     = values['inputImportance'],

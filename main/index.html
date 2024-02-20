@@ -6547,25 +6547,9 @@
                                 max-height=80vh
                                 overflow=auto
                                 >
-                                    <h5>Column Importance</h5>
-                                    <span color=gray>(use 0 importance to ignore a column)</span>
-                                    ${dynamicInputs}
-                                    
                                     <h5>Settings</h5>
                                     <label for="datetimeColumn">Name of Datetime Column</label>
                                     ${dateTimeInput = html`<input type="text" name="datetimeColumn" required background=whitesmoke border-radius=0.2rem border=none value="datetime" margin-bottom=1.5rem>`}
-                                    
-                                    <label for="maxHoursGap">Max Gap Size (Hours)</label>
-                                    <input type="number" name="maxHoursGap" min="1" required background=whitesmoke border-radius=0.2rem border=none value=4 margin-bottom=1.5rem>
-                                    
-                                    <label for="numberOfNeighbors">Number of Neighbors</label>
-                                    <input type="number" name="numberOfNeighbors" min="1" required background=whitesmoke border-radius=0.2rem border=none value=3 margin-bottom=1.5rem>
-                                    
-                                    <label for="windowSize">Window Size:</label>
-                                    <input type="number" name="windowSize" min="1" required background=whitesmoke border-radius=0.2rem border=none value=10 margin-bottom=1.5rem>
-
-                                    <label for="importanceDecay">Importance Decay per Timestep <br>(between 0 and 1)</label>
-                                    <input type="number" name="importanceDecay" step="0.01" min="0" max="1" value=0.7 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
                                     
                                     <label for="outputGroups">Product Column(s)</label>
                                     <input
@@ -6577,6 +6561,23 @@
                                         border=none
                                         margin-bottom=1.5rem
                                         >
+                                    
+                                    <label for="importanceDecay">Importance Decay per Timestep <br>(between 0 and 1)</label>
+                                    <input type="number" name="importanceDecay" step="0.01" min="0" max="1" value=0.7 required background=whitesmoke border-radius=0.2rem border=none  margin-bottom=1.5rem>
+                                    
+                                    <label for="maxHoursGap">Max Gap Size (Hours)</label>
+                                    <input type="number" name="maxHoursGap" min="1" required background=whitesmoke border-radius=0.2rem border=none value=4 margin-bottom=1.5rem>
+                                    
+                                    <!-- <label for="numberOfNeighbors">Number of Neighbors</label>
+                                    <input type="number" name="numberOfNeighbors" min="1" required background=whitesmoke border-radius=0.2rem border=none value=3 margin-bottom=1.5rem> -->
+                                    
+                                    <!-- <label for="windowSize">Window Size:</label>
+                                    <input type="number" name="windowSize" min="1" required background=whitesmoke border-radius=0.2rem border=none value=10 margin-bottom=1.5rem> -->
+
+                                    <div min-height=2rem />
+                                    <h5>Column Importance</h5>
+                                    <span color=gray>(use 0 importance to ignore a column)</span>
+                                    ${dynamicInputs}
                                     
                             </form>`}
                             <Button
