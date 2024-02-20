@@ -1,3 +1,14 @@
+# Start your process here
+python ./main/neo_main.py &
+
+# Save the process ID (PID) of the last background process
+process_pid=$!
+
+echo "Process started with PID: $process_pid"
+
+# first Sleep waits till like 1am, then repeats
+sleep 12h
+
 # Infinite loop
 while true; do
     # Start your process here
